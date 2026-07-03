@@ -7,9 +7,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -28,8 +27,7 @@ import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticatio
 import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
 import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
 
-@Singleton
-@Named("GithubApiClient")
+@Component("GithubApiClient")
 public class GithubApiClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(GithubApiClient.class);
 
@@ -50,7 +48,7 @@ public class GithubApiClient {
         initPrincipalCache();
     }
 
-    @Inject
+    @Autowired
     public GithubApiClient(GithubOauthConfiguration configuration) {
         this.configuration = configuration;
         init();

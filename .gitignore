@@ -5,3 +5,9 @@
 /bin/
 /*.iml
 /.idea/
+
+# build output
+target/
+.classpath
+.project
+.settings/

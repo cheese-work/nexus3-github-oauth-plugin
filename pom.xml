@@ -3,10 +3,13 @@
   Nexus 3.93.2+ port of nexus3-github-oauth-plugin.
 
   Nexus 3.71+ replaced the Karaf/OSGi runtime with a Spring Boot runtime.
-  Plugins are now plain jars discovered by Spring component scanning when
-  dropped into $NEXUS_HOME/deploy/. This pom mirrors the structure of the
-  bundled org.sonatype.nexus.common.components:nexus-default-role-plugin,
-  inheriting version management from the published Nexus components parent.
+  Plugins are now plain jars consumed by the Spring runtime. Nexus 3.93.2
+  launches with Spring Boot JarLauncher, so external jars are not picked up from
+  the legacy Karaf deploy directory. The deployment helper embeds the shaded
+  plugin jar into the Nexus executable boot jar under BOOT-INF/lib and updates
+  BOOT-INF/classpath.idx. This pom mirrors the structure of the bundled
+  org.sonatype.nexus.common.components:nexus-default-role-plugin, inheriting
+  version management from the published Nexus components parent.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

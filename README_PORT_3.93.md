@@ -22,7 +22,7 @@ Nexus 3.71 replaced the **Karaf/OSGi** runtime with a **Spring Boot** runtime.
 | Parent POM | `org.sonatype.nexus.plugins:nexus-plugins:3.43.0-01` | `org.sonatype.nexus.common.components:nexus-common-components-parent:3.93.2-01` |
 | DI annotations | `javax.inject.Named`, `com.google.inject.Singleton` | `@Component`, `@Qualifier` (Spring) |
 | `@Description` | `org.eclipse.sisu.Description` | `org.sonatype.nexus.common.Description` |
-| Discovery | Karaf feature XML + OSGi bundle | bridge `@Configuration` under `org.sonatype.nexus.*` + `loader.path` (see below) |
+| Discovery | Karaf feature XML + OSGi bundle | bridge `@Configuration` under `org.sonatype.nexus.*` + boot-jar embed (see below) |
 
 The GitHub authz logic (`GithubApiClient`, org/team/role mapping, principal
 caching) is **unchanged** — only the DI wiring, build packaging, and deploy
@@ -49,11 +49,15 @@ mechanism:
    system variable. So even if a plugin jar is on the classpath, classes in
    `com.larscheidschmitzhermes.*` will never be component-scanned.
 
-The launch main class, however, **is**
-`org.springframework.boot.loader.launch.PropertiesLauncher` (Spring Boot 3.5),
-which supports `loader.path` to add external jars/directories to the boot
-classloader. Combined with a small bridge `@Configuration` placed under the
-scanned `org.sonatype.nexus.*` namespace, this is the working deploy path.
+The live Nexus 3.93.2 launcher, however, is **not** `PropertiesLauncher`.
+Its manifest uses `org.springframework.boot.loader.launch.JarLauncher`, and
+the generated `/opt/nexus/bin/nexus` script runs it with `java -jar`.
+`JarLauncher` ignores `loader.path`, and `java -jar` ignores ordinary external
+`-classpath` additions. The reliable deployment path is therefore to embed the
+plugin jar into the executable Nexus boot jar as `BOOT-INF/lib/<plugin>.jar`
+and append it to `BOOT-INF/classpath.idx`. Combined with a small bridge
+`@Configuration` placed under the scanned `org.sonatype.nexus.*` namespace,
+this makes the realm visible to Spring component scanning.
 
 ### The bridge config
 
@@ -95,48 +99,67 @@ do not apply to a standalone plugin module targeting `--release 21`.
 
 ## Deploy
 
-Because the classpath is built from `${KARAF_HOME}/bin/*.jar` only, the plugin
-jar must be added via Spring Boot `loader.path`. Pick **one** of the options
-below.
+Nexus 3.93.2 is launched by `JarLauncher`:
 
-### Option A — `loader.path` via `bin/setenv` (recommended, no jar editing)
+```text
+Main-Class: org.springframework.boot.loader.launch.JarLauncher
+java ... -jar /opt/nexus/bin/sonatype-nexus-repository-3.93.2-01.jar
+```
 
-1. Copy the plugin jar into the Nexus install:
-   ```bash
-   sudo mkdir -p /opt/nexus/lib/ext
-   sudo cp target/nexus3-github-oauth-plugin-3.93.2-01.jar /opt/nexus/lib/ext/
-   sudo chown -R nexus:nexus /opt/nexus/lib/ext
-   ```
-2. Tell `PropertiesLauncher` to load it. Edit `/opt/nexus/bin/setenv`
-   (sourced by `bin/nexus`):
-   ```bash
-   export JAVA_OPTS="${JAVA_OPTS} -Dloader.path=lib/ext/nexus3-github-oauth-plugin-3.93.2-01.jar"
-   ```
-   (`loader.path` accepts comma-separated `jar`/`dir`/`dir/` entries relative
-   to the boot jar's working dir; the boot jar is `${KARAF_HOME}/bin/*.jar`,
-   so paths resolve under `${KARAF_HOME}`.)
-3. Remove any stale Karaf artifact that the new runtime ignores:
-   ```bash
-   rm -f /opt/nexus/deploy/nexus3-github-oauth-plugin-*.kar
-   ```
-4. Restart Nexus (brief restart window):
-   ```bash
-   sudo systemctl restart nexus
-   ```
+That means the old Karaf `/deploy` scanner is gone, `loader.path` is ignored,
+and adding an external `-classpath` is ineffective. The plugin must be embedded
+into the Nexus executable boot jar under `BOOT-INF/lib/` and listed in
+`BOOT-INF/classpath.idx`.
 
-### Option B — drop the jar next to the boot jar
-
-The classpath is `${KARAF_HOME}/bin/*.jar`, so simply placing the plugin jar
-in `/opt/nexus/bin/` puts it on the classpath with no `loader.path` change:
+Use the checked-in installer so the boot jar is backed up, patched, and
+validated consistently:
 
 ```bash
-sudo cp target/nexus3-github-oauth-plugin-3.93.2-01.jar /opt/nexus/bin/
-sudo chown nexus:nexus /opt/nexus/bin/nexus3-github-oauth-plugin-3.93.2-01.jar
+./mvnw -Denforcer.skip=true -DskipTests clean package
+
+# Run on the Nexus host, or copy both the jar and script there first.
+sudo ./scripts/install-nexus-3.93-plugin.sh \
+  --plugin target/nexus3-github-oauth-plugin-3.93.2-01.jar \
+  --nexus-home /opt/nexus
+
+# Restart during an approved maintenance window.
 sudo systemctl restart nexus
 ```
 
-This is simpler but mixes plugin code with Nexus's own boot jars; prefer
-Option A for cleanliness.
+The installer performs these steps:
+
+1. Finds `/opt/nexus/bin/sonatype-nexus-repository-*.jar`.
+2. Writes a timestamped backup next to the boot jar.
+3. Removes any older embedded `nexus3-github-oauth-plugin-*.jar`.
+4. Adds the new plugin jar as `BOOT-INF/lib/nexus3-github-oauth-plugin-3.93.2-01.jar`.
+5. Appends that nested jar to `BOOT-INF/classpath.idx`.
+6. Validates the patched boot jar contains both the nested jar and classpath
+   index entry.
+
+For one-shot installs you can let the script restart Nexus after patching:
+
+```bash
+sudo ./scripts/install-nexus-3.93-plugin.sh \
+  --plugin target/nexus3-github-oauth-plugin-3.93.2-01.jar \
+  --nexus-home /opt/nexus \
+  --restart
+```
+
+Rollback is just replacing the patched boot jar with the timestamped backup and
+restarting Nexus:
+
+```bash
+sudo cp /opt/nexus/bin/sonatype-nexus-repository-3.93.2-01.jar.backup.<timestamp> \
+  /opt/nexus/bin/sonatype-nexus-repository-3.93.2-01.jar
+sudo systemctl restart nexus
+```
+
+Remove stale Karaf artifacts if present; Nexus 3.93 ignores them but they are
+confusing during troubleshooting:
+
+```bash
+sudo rm -f /opt/nexus/deploy/nexus3-github-oauth-plugin*.kar
+```
 
 ## Verify
 

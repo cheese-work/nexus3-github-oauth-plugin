@@ -29,7 +29,7 @@ import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.Githu
 
 @Component("GithubApiClient")
 public class GithubApiClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GithubApiClient.class);
+    private final Logger logger = LoggerFactory.getLogger(GithubApiClient.class);
 
     private HttpClient client;
     private GithubOauthConfiguration configuration;
@@ -80,7 +80,7 @@ public class GithubApiClient {
         String cacheKey = login + "|" + new String(token);
         GithubPrincipal cached = tokenToPrincipalCache.getIfPresent(cacheKey);
         if (cached != null) {
-            LOGGER.debug("Using cached principal for login: {}", login);
+            logger.debug("Using cached principal for login: {}", login);
             return cached;
         } else {
             GithubPrincipal principal = doAuthz(login, token);
@@ -125,7 +125,7 @@ public class GithubApiClient {
     private Set<String> generateRolesFromGithubOrgMemberships(char[] token, String loginName) throws GithubAuthenticationException {
         Set<GithubTeam> teams = getAndSerializeCollection(configuration.getGithubUserTeamsUri(), token, GithubTeam.class);
         if (teams.size() >= 100) {
-            LOGGER.warn("Fetching only the first 100 teams for user '{}'", loginName);
+            logger.warn("Fetching only the first 100 teams for user '{}'", loginName);
         }
         return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
     }
@@ -166,7 +166,7 @@ public class GithubApiClient {
         try {
             HttpResponse response = client.execute(request);
             if (response.getStatusLine().getStatusCode() != 200) {
-                LOGGER.warn("Authentication failed, status code was {}",
+                logger.warn("Authentication failed, status code was {}",
                         response.getStatusLine().getStatusCode());
                 request.releaseConnection();
                 throw new GithubAuthenticationException("Authentication failed.");

@@ -1,12 +1,12 @@
-package org.sonatype.nexus.plugins.githuboauth;
+package com.larscheidschmitzhermes.nexus3.github.oauth.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import GithubApiClient;
-import GithubOrg;
-import GithubTeam;
-import GithubUser;
-import GithubOauthConfiguration;
-import MockGithubOauthConfiguration;
+import org.sonatype.nexus.plugins.githuboauth.GithubApiClient;
+import org.sonatype.nexus.plugins.githuboauth.GithubOrg;
+import org.sonatype.nexus.plugins.githuboauth.GithubTeam;
+import org.sonatype.nexus.plugins.githuboauth.GithubUser;
+import org.sonatype.nexus.plugins.githuboauth.GithubOauthConfiguration;
+import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.MockGithubOauthConfiguration;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;

@@ -25,7 +25,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.sonatype.nexus.plugins.githuboauth.GithubAuthenticationException;
 import org.sonatype.nexus.plugins.githuboauth.GithubPrincipal;
-import GithubOauthConfiguration;
 
 @Component
 public class GithubApiClient {

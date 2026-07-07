@@ -1,4 +1,4 @@
-package org.sonatype.nexus.plugins.githuboauth.configuration;
+package org.sonatype.nexus.plugins.githuboauth;
 
 import java.io.IOException;
 import java.nio.file.Files;

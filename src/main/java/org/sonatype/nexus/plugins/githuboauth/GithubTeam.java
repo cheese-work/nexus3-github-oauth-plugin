@@ -1,4 +1,4 @@
-package org.sonatype.nexus.plugins.githuboauth.api;
+package org.sonatype.nexus.plugins.githuboauth;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

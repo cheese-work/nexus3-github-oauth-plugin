@@ -1,4 +1,4 @@
-package org.sonatype.nexus.plugins.githuboauth.api;
+package org.sonatype.nexus.plugins.githuboauth;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -25,7 +25,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.sonatype.nexus.plugins.githuboauth.GithubAuthenticationException;
 import org.sonatype.nexus.plugins.githuboauth.GithubPrincipal;
-import org.sonatype.nexus.plugins.githuboauth.configuration.GithubOauthConfiguration;
+import GithubOauthConfiguration;
 
 @Component
 public class GithubApiClient {

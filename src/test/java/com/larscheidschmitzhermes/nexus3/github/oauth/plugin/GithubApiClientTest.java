@@ -6,6 +6,8 @@ import org.sonatype.nexus.plugins.githuboauth.GithubOrg;
 import org.sonatype.nexus.plugins.githuboauth.GithubTeam;
 import org.sonatype.nexus.plugins.githuboauth.GithubUser;
 import org.sonatype.nexus.plugins.githuboauth.GithubOauthConfiguration;
+import org.sonatype.nexus.plugins.githuboauth.GithubPrincipal;
+import org.sonatype.nexus.plugins.githuboauth.GithubAuthenticationException;
 import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.MockGithubOauthConfiguration;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

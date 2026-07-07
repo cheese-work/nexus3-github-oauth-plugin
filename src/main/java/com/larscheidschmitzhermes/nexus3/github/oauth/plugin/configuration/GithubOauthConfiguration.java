@@ -6,13 +6,10 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Properties;
 
-import org.springframework.stereotype.Component;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Component
 public class GithubOauthConfiguration {
     private static final String CONFIG_FILE = "githuboauth.properties";
 

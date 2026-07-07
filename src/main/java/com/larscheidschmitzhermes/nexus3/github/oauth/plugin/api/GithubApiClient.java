@@ -7,8 +7,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -16,8 +16,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +25,6 @@ import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticatio
 import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
 import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
 
-@Component("GithubApiClient")
 public class GithubApiClient {
     private final Logger logger = LoggerFactory.getLogger(GithubApiClient.class);
 
@@ -37,7 +34,8 @@ public class GithubApiClient {
     // Cache token lookups to reduce the load on Github's User API to prevent hitting the rate limit.
     private Cache<String, GithubPrincipal> tokenToPrincipalCache;
 
-    public GithubApiClient() {
+    public GithubApiClient(GithubOauthConfiguration configuration) {
+        this.configuration = configuration;
         init();
     }
 
@@ -46,12 +44,6 @@ public class GithubApiClient {
         this.configuration = configuration;
         mapper = new ObjectMapper();
         initPrincipalCache();
-    }
-
-    @Autowired
-    public GithubApiClient(GithubOauthConfiguration configuration) {
-        this.configuration = configuration;
-        init();
     }
 
     public void init() {

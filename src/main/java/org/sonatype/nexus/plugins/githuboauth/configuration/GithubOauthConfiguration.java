@@ -1,4 +1,4 @@
-package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration;
+package org.sonatype.nexus.plugins.githuboauth.configuration;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,8 +8,10 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 
+@Component
 public class GithubOauthConfiguration {
     private static final String CONFIG_FILE = "githuboauth.properties";
 

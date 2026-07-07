@@ -1,4 +1,4 @@
-package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration;
+package org.sonatype.nexus.plugins.githuboauth.configuration;
 
 
 import java.time.Duration;

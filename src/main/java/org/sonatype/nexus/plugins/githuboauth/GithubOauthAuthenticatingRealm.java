@@ -1,6 +1,6 @@
-package com.larscheidschmitzhermes.nexus3.github.oauth.plugin;
+package org.sonatype.nexus.plugins.githuboauth;
 
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api.GithubApiClient;
+import org.sonatype.nexus.plugins.githuboauth.api.GithubApiClient;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -14,7 +14,9 @@ import org.apache.shiro.subject.PrincipalCollection;
 import org.sonatype.nexus.common.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
  * the realm qualifier map and exposes it on the Administration &rarr; Security &rarr; Realms
  * page.</p>
  */
+@Component
 @Qualifier(GithubOauthAuthenticatingRealm.NAME)
 @Description("Github Enterprise Authentication Realm")
 public class GithubOauthAuthenticatingRealm extends AuthorizingRealm {
@@ -35,6 +38,7 @@ public class GithubOauthAuthenticatingRealm extends AuthorizingRealm {
 
     private final GithubApiClient githubClient;
 
+    @Autowired
     public GithubOauthAuthenticatingRealm(final GithubApiClient githubClient) {
         this.githubClient = githubClient;
     }

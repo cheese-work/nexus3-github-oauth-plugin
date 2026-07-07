@@ -1,4 +1,4 @@
-package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
+package org.sonatype.nexus.plugins.githuboauth.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

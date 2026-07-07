@@ -1,4 +1,4 @@
-package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
+package org.sonatype.nexus.plugins.githuboauth.api;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -21,10 +23,11 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
+import org.sonatype.nexus.plugins.githuboauth.GithubAuthenticationException;
+import org.sonatype.nexus.plugins.githuboauth.GithubPrincipal;
+import org.sonatype.nexus.plugins.githuboauth.configuration.GithubOauthConfiguration;
 
+@Component
 public class GithubApiClient {
     private final Logger logger = LoggerFactory.getLogger(GithubApiClient.class);
 
@@ -34,6 +37,7 @@ public class GithubApiClient {
     // Cache token lookups to reduce the load on Github's User API to prevent hitting the rate limit.
     private Cache<String, GithubPrincipal> tokenToPrincipalCache;
 
+    @Autowired
     public GithubApiClient(GithubOauthConfiguration configuration) {
         this.configuration = configuration;
         init();

@@ -1,4 +1,4 @@
-package com.larscheidschmitzhermes.nexus3.github.oauth.plugin;
+package org.sonatype.nexus.plugins.githuboauth;
 
 public class GithubAuthenticationException extends Exception{
     public GithubAuthenticationException(String message){

@@ -1,4 +1,4 @@
-package com.larscheidschmitzhermes.nexus3.github.oauth.plugin.api;
+package org.sonatype.nexus.plugins.githuboauth;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,9 +7,10 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -17,21 +18,17 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubAuthenticationException;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.GithubPrincipal;
-import com.larscheidschmitzhermes.nexus3.github.oauth.plugin.configuration.GithubOauthConfiguration;
+import org.sonatype.nexus.plugins.githuboauth.GithubAuthenticationException;
+import org.sonatype.nexus.plugins.githuboauth.GithubPrincipal;
 
-@Singleton
-@Named("GithubApiClient")
+@Component
 public class GithubApiClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GithubApiClient.class);
+    private final Logger logger = LoggerFactory.getLogger(GithubApiClient.class);
 
     private HttpClient client;
     private GithubOauthConfiguration configuration;
@@ -39,7 +36,9 @@ public class GithubApiClient {
     // Cache token lookups to reduce the load on Github's User API to prevent hitting the rate limit.
     private Cache<String, GithubPrincipal> tokenToPrincipalCache;
 
-    public GithubApiClient() {
+    @Autowired
+    public GithubApiClient(GithubOauthConfiguration configuration) {
+        this.configuration = configuration;
         init();
     }
 
@@ -48,12 +47,6 @@ public class GithubApiClient {
         this.configuration = configuration;
         mapper = new ObjectMapper();
         initPrincipalCache();
-    }
-
-    @Inject
-    public GithubApiClient(GithubOauthConfiguration configuration) {
-        this.configuration = configuration;
-        init();
     }
 
     public void init() {
@@ -82,7 +75,7 @@ public class GithubApiClient {
         String cacheKey = login + "|" + new String(token);
         GithubPrincipal cached = tokenToPrincipalCache.getIfPresent(cacheKey);
         if (cached != null) {
-            LOGGER.debug("Using cached principal for login: {}", login);
+            logger.debug("Using cached principal for login: {}", login);
             return cached;
         } else {
             GithubPrincipal principal = doAuthz(login, token);
@@ -127,7 +120,7 @@ public class GithubApiClient {
     private Set<String> generateRolesFromGithubOrgMemberships(char[] token, String loginName) throws GithubAuthenticationException {
         Set<GithubTeam> teams = getAndSerializeCollection(configuration.getGithubUserTeamsUri(), token, GithubTeam.class);
         if (teams.size() >= 100) {
-            LOGGER.warn("Fetching only the first 100 teams for user '{}'", loginName);
+            logger.warn("Fetching only the first 100 teams for user '{}'", loginName);
         }
         return teams.stream().map(this::mapGithubTeamToNexusRole).collect(Collectors.toSet());
     }
@@ -168,7 +161,7 @@ public class GithubApiClient {
         try {
             HttpResponse response = client.execute(request);
             if (response.getStatusLine().getStatusCode() != 200) {
-                LOGGER.warn("Authentication failed, status code was {}",
+                logger.warn("Authentication failed, status code was {}",
                         response.getStatusLine().getStatusCode());
                 request.releaseConnection();
                 throw new GithubAuthenticationException("Authentication failed.");
